@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方块世界 | 现代化Minecraft服务器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Minecraftia&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --primary-dark: #2667cc;
+            --accent: #ffbe0b;
+            --dark: #1a1a2e;
+            --darker: #0f0f1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #38b000;
+            --danger: #e63946;
+            --minecraft-green: #55aa55;
+            --minecraft-dark-green: #2d5a2d;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--light);
+            background-color: var(--darker);
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-family: 'Minecraftia', monospace;
+            color: var(--accent);
+            text-shadow: 3px 3px 0 #000;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        h3 {
+            font-size: 1.8rem;
+            color: var(--light);
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        section {
+            padding: 100px 0;
+        }
+        
+        /* 导航栏 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+        
+        header.scrolled {
+            padding: 10px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-family: 'Minecraftia', monospace;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--primary);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: var(--transition);
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(58, 134, 255, 0.3);
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* 英雄区域 */
+        .hero {
+            padding-top: 180px;
+            padding-bottom: 100px;
+            background: linear-gradient(rgba(15, 15, 26, 0.9), rgba(15, 15, 26, 0.9)), url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(58, 134, 255, 0.1) 0%, transparent 50%);
+        }
+        
+        .hero h1 {
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2.5rem;
+            color: #ddd;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+        
+        .server-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            min-width: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+        }
+        
+        .info-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-card i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        /* 关于服务器 */
+        .about {
+            background-color: var(--dark);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .feature i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        /* 游戏模式 */
+        .gamemodes {
+            background-color: var(--darker);
+        }
+        
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .mode-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+        }
+        
+        .mode-icon {
+            height: 150px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mode-icon i {
+            font-size: 4rem;
+            color: white;
+        }
+        
+        .mode-content {
+            padding: 25px;
+        }
+        
+        /* 如何加入 */
+        .join-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            position: relative;
+            flex-wrap: wrap;
+        }
+        
+        .join-steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            z-index: 1;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 30px;
+        }
+        
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            border: 5px solid var(--dark);
+        }
+        
+        /* 页脚 */
+        footer {
+            background-color: #0a0a14;
+            padding: 70px 0 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            font-family: 'Minecraftia', monospace;
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            h2 {
+                font-size: 2.2rem;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background-color: var(--dark);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                gap: 0;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+                z-index: 999;
+            }
+            
+            .nav-links.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .nav-links a {
+                padding: 15px;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .hero {
+                padding-top: 150px;
+            }
+            
+            .join-steps::before {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            section {
+                padding: 70px 0;
+            }
+            
+            h1 {
+                font-size: 2.3rem;
+            }
+            
+            h2 {
+                font-size: 1.9rem;
+            }
+            
+            .server-info {
+                gap: 15px;
+            }
+            
+            .info-card {
+                min-width: 160px;
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+        
+        /* 方块背景装饰 */
+        .block-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
+            background-image: 
+                linear-gradient(rgba(58, 134, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(58, 134, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 方块背景 -->
+    <div class="block-bg"></div>
+    
+    <!-- 导航栏 -->
+    <header id="header">
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fas fa-cube"></i>
+                    <span>方块世界</span>
+                </div>
+                
+                <div class="nav-links" id="navLinks">
+                    <a href="#home">首页</a>
+                    <a href="#about">关于服务器</a>
+                    <a href="#gamemodes">游戏模式</a>
+                    <a href="#join">如何加入</a>
+                    <a href="#contact">联系我们</a>
+                </div>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- 英雄区域 -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>方块世界服务器</h1>
+            <p>一个现代化、友好且充满创新的Minecraft服务器。加入我们，探索独特的游戏模式，与全球玩家一起建造、生存和冒险！</p>
+            
+            <a href="#join" class="cta-button">
+                <i class="fas fa-gamepad"></i>
+                立即加入
+            </a>
+            
+            <div class="server-info">
+                <div class="info-card">
+                    <i class="fas fa-users"></i>
+                    <h3>在线玩家</h3>
+                    <p>250+</p>
+                </div>
+                
+                <div class="info-card">
+                    <i class="fas fa-server"></i>
+                    <h3>正常运行时间</h3>
+                    <p>99.8%</p>
+                </div>
+                
+                <div class="info-card">
+                    <i class="fas fa-globe"></i>
+                    <h3>全球延迟</h3>
+                    <p>&lt; 50ms</p>
+                </div>
+                
+                <div class="info-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>已运行</h3>
+                    <p>850+ 天</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 关于服务器 -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2>关于服务器</h2>
+            <p>方块世界服务器是一个专注于提供优质Minecraft游戏体验的社区。我们拥有高性能硬件、专业的管理团队和友好的玩家社区。无论你是建筑大师、红石工程师还是冒险家，这里都有你的一席之地。</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>安全稳定</h3>
+                    <p>24/7全天候运行，采用先进的防作弊系统，确保游戏环境公平公正。</p>
+                </div>
+                
+                <div class="feature">
+                    <i class="fas fa-sync-alt"></i>
+                    <h3>定期更新</h3>
+                    <p>持续添加新内容、修复问题并优化性能，确保最佳游戏体验。</p>
+                </div>
+                
+                <div class="feature">
+                    <i class="fas fa-headset"></i>
+                    <h3>优质支持</h3>
+                    <p>专业的管理团队随时为您提供帮助，快速响应玩家反馈。</p>
+                </div>
+                
+                <div class="feature">
+                    <i class="fas fa-gem"></i>
+                    <h3>独特功能</h3>
+                    <p>自定义插件、独家游戏模式和定期活动，带来全新游戏体验。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 游戏模式 -->
+    <section class="gamemodes" id="gamemodes">
+        <div class="container">
+            <h2>游戏模式</h2>
+            <p>我们提供多种游戏模式，满足不同类型玩家的需求。每个模式都有独特的特点和玩法！</p>
+            
+            <div class="mode-cards">
+                <div class="mode-card">
+                    <div class="mode-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <div class="mode-content">
+                        <h3>生存模式</h3>
+                        <p>经典生存体验，包含领地保护、经济系统、商店和丰富的任务系统。与其他玩家合作或竞争，建造属于你的世界。</p>
+                    </div>
+                </div>
+                
+                <div class="mode-card">
+                    <div class="mode-icon">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <div class="mode-content">
+                        <h3>创造城市</h3>
+                        <p>专注于建筑创作的模式，提供无限资源和各种建筑工具。参与城市建设项目，打造壮观的城市景观。</p>
+                    </div>
+                </div>
+                
+                <div class="mode-card">
+                    <div class="mode-icon">
+                        <i class="fas fa-fist-raised"></i>
+                    </div>
+                    <div class="mode-content">
+                        <h3>小游戏集合</h3>
+                        <p>包含起床战争、空岛战争、跑酷、躲猫猫等多种小游戏。随时加入，快速享受游戏乐趣。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 如何加入 -->
+    <section class="join" id="join">
+        <div class="container">
+            <h2>如何加入</h2>
+            <p>只需简单几步，即可加入我们的服务器，开启你的Minecraft冒险之旅！</p>
+            
+            <div class="join-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>准备游戏</h3>
+                    <p>确保你拥有正版Minecraft Java版，版本为1.16-1.20</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>添加服务器</h3>
+                    <p>在多人游戏中点击"添加服务器"，输入我们的服务器地址</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>连接加入</h3>
+                    <p>选择我们的服务器并点击"加入服务器"，开始你的冒险</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>注册账号</h3>
+                    <p>首次加入需要注册账号，输入"/register 密码 密码"完成注册</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <div class="info-card" style="display: inline-block; max-width: 500px;">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>服务器地址</h3>
+                    <p style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">play.blockworld.com</p>
+                    <p>端口: 25565 (默认)</p>
+                    <p style="margin-top: 15px; font-size: 0.9rem;">支持版本: 1.16.x - 1.20.x</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <div class="footer-logo">方块世界</div>
+                    <p>一个致力于提供最佳Minecraft游戏体验的社区服务器。我们欢迎所有玩家加入我们的大家庭！</p>
+                    
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>快速链接</h3>
+                    <ul style="list-style: none;">
+                        <li style="margin-bottom: 10px;"><a href="#home" style="color: #ccc; text-decoration: none; transition: var(--transition);">首页</a></li>
+                        <li style="margin-bottom: 10px;"><a href="#about" style="color: #ccc; text-decoration: none; transition: var(--transition);">关于服务器</a></li>
+                        <li style="margin-bottom: 10px;"><a href="#gamemodes" style="color: #ccc; text-decoration: none; transition: var(--transition);">游戏模式</a></li>
+                        <li style="margin-bottom: 10px;"><a href="#join" style="color: #ccc; text-decoration: none; transition: var(--transition);">如何加入</a></li>
+                        <li style="margin-bottom: 10px;"><a href="#contact" style="color: #ccc; text-decoration: none; transition: var(--transition);">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>联系我们</h3>
+                    <p><i class="fas fa-envelope" style="margin-right: 10px;"></i> support@blockworld.com</p>
+                    <p><i class="fas fa-globe" style="margin-right: 10px;"></i> www.blockworld.com</p>
+                    <p><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> 服务器位置: 北美、欧洲、亚洲</p>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 方块世界服务器. 保留所有权利. Minecraft是Mojang AB的商标.</p>
+                <p style="margin-top: 5px;">本服务器与Mojang AB没有关联，由独立团队运营.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 移动端菜单切换
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            mobileMenuBtn.innerHTML = navLinks.classList.contains('active') 
+                ? '<i class="fas fa-times"></i>' 
+                : '<i class="fas fa-bars"></i>';
+        });
+        
+        // 点击导航链接后关闭移动菜单
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            });
+        });
+        
+        // 滚动时改变导航栏样式
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+        
+        // 服务器状态模拟更新
+        function updatePlayerCount() {
+            const playerCount = document.querySelector('.server-info .info-card:nth-child(1) p');
+            const currentCount = parseInt(playerCount.textContent);
+            const newCount = currentCount + Math.floor(Math.random() * 10) - 4;
+            const finalCount = Math.max(240, Math.min(280, newCount));
+            playerCount.textContent = finalCount + "+";
+        }
+        
+        // 每30秒更新一次在线玩家数
+        setInterval(updatePlayerCount, 30000);
+        
+        // 页面加载时的动画效果
+        document.addEventListener('DOMContentLoaded', () => {
+            // 添加滚动动画
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            // 观察所有需要动画的元素
+            document.querySelectorAll('.feature, .mode-card, .step').forEach(el => {
+                el.style.opacity = '0';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
